@@ -1,0 +1,20 @@
+[gd_scene load_steps=4 format=2]
+
+[ext_resource path="res://terrain_tileset.tres" type="TileSet" id=1]
+[ext_resource path="res://TileMapExporter.gd" type="Script" id=2]
+[ext_resource path="res://TileSetExporter.gd" type="Script" id=3]
+
+[node name="Node2D" type="Node2D"]
+
+[node name="TileMap" type="TileMap" parent="."]
+tile_set = ExtResource( 1 )
+cell_size = Vector2( 200, 200 )
+cell_custom_transform = Transform2D( 200, 0, 0, 200, 0, 0 )
+format = 1
+tile_data = PoolIntArray( 0, 2, 0, 1, 2, 1, 2, 2, 2, 3, 2, 3, 4, 2, 4, 65536, 2, 65536, 65537, 2, 65537, 65538, 2, 65538, 131072, 2, 131072, 131073, 2, 131073, 131074, 2, 131074, 131075, 2, 131075, 131076, 2, 131076, 131077, 2, 131077, 131078, 2, 131078, 131079, 2, 131079, 196608, 2, 196608, 196609, 2, 196609, 196610, 2, 196610, 196611, 2, 196611, 196612, 2, 196612, 196613, 2, 196613, 196614, 2, 196614, 196615, 2, 196615, 262144, 2, 262144, 262145, 2, 262145, 262146, 2, 262146, 262147, 2, 262147, 262148, 2, 262148, 262149, 2, 262149, 262150, 2, 262150, 262151, 2, 262151 )
+
+[node name="Node" type="Node" parent="."]
+script = ExtResource( 2 )
+
+[node name="Node2" type="Node" parent="."]
+script = ExtResource( 3 )

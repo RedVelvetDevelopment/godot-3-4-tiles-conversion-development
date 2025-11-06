@@ -1,0 +1,147 @@
+{
+	"name": "TileMap",
+	"atlas_path": "res://dev-terrain-atlas.png",
+	"tile_ids": [
+		0,
+		1
+	],
+	"tile_regions": [
+		"(0, 0, 1600, 1600)",
+		"(0, 0, 3072, 1792)"
+	],
+	"cell_size": "(200, 130)",
+	"cell_quadrant_size": 16,
+	"cell_custom_transform": "((200, 0), (0, 200), (0, 0))",
+	"cell_half_offest": 2,
+	"cell_tile_origin": 0,
+	"cell_y_sort": false,
+	"show_collision": false,
+	"compatibility_mode": false,
+	"centered_textures": false,
+	"cell_clip_uv": false,
+	"collision_use_parent": false,
+	"collision_use_kinematic": false,
+	"collision_friction": 1,
+	"cells": [
+		{
+			"x": 0,
+			"y": 0,
+			"id": "(0, 0)",
+			"transposed": false,
+			"x_flipped": false,
+			"y_flipped": false
+		},
+		{
+			"x": 1,
+			"y": 0,
+			"id": "(2, 0)",
+			"transposed": false,
+			"x_flipped": false,
+			"y_flipped": false
+		},
+		{
+			"x": 2,
+			"y": 0,
+			"id": "(1, 0)",
+			"transposed": false,
+			"x_flipped": false,
+			"y_flipped": false
+		},
+		{
+			"x": 3,
+			"y": 0,
+			"id": "(0, 0)",
+			"transposed": false,
+			"x_flipped": false,
+			"y_flipped": false
+		},
+		{
+			"x": 4,
+			"y": 0,
+			"id": "(5, 0)",
+			"transposed": false,
+			"x_flipped": false,
+			"y_flipped": false
+		},
+		{
+			"x": 0,
+			"y": 1,
+			"id": "(0, 0)",
+			"transposed": false,
+			"x_flipped": false,
+			"y_flipped": false
+		},
+		{
+			"x": 1,
+			"y": 1,
+			"id": "(2, 0)",
+			"transposed": false,
+			"x_flipped": false,
+			"y_flipped": false
+		},
+		{
+			"x": 2,
+			"y": 1,
+			"id": "(1, 0)",
+			"transposed": false,
+			"x_flipped": false,
+			"y_flipped": false
+		},
+		{
+			"x": 0,
+			"y": 2,
+			"id": "(0, 0)",
+			"transposed": false,
+			"x_flipped": false,
+			"y_flipped": false
+		},
+		{
+			"x": 1,
+			"y": 2,
+			"id": "(2, 0)",
+			"transposed": false,
+			"x_flipped": false,
+			"y_flipped": false
+		},
+		{
+			"x": 2,
+			"y": 2,
+			"id": "(1, 0)",
+			"transposed": false,
+			"x_flipped": false,
+			"y_flipped": false
+		},
+		{
+			"x": 3,
+			"y": 2,
+			"id": "(3, 0)",
+			"transposed": false,
+			"x_flipped": false,
+			"y_flipped": false
+		},
+		{
+			"x": 0,
+			"y": 3,
+			"id": "(0, 0)",
+			"transposed": false,
+			"x_flipped": false,
+			"y_flipped": false
+		},
+		{
+			"x": 1,
+			"y": 3,
+			"id": "(2, 0)",
+			"transposed": false,
+			"x_flipped": false,
+			"y_flipped": false
+		},
+		{
+			"x": 2,
+			"y": 3,
+			"id": "(1, 0)",
+			"transposed": false,
+			"x_flipped": false,
+			"y_flipped": false
+		}
+	]
+}
