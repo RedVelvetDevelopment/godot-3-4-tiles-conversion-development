@@ -4,7 +4,7 @@ class_name TileMapExporter
 export var output_path:String
 
 var tilemaps:Array = []
-var tilesets:Array = []
+#var tilesets:Array = []
 
 func _ready():
 	_collect_tilemaps(get_tree().root)
@@ -20,7 +20,7 @@ func _ready():
 func _write_file(path:String, name:String, dict:Dictionary):
 	var json = JSON.print(dict, "\t")
 
-	var file_path = path + name +".json"
+	var file_path = path + "/" + name +".json"
 	var file = File.new()
 	var error = file.open(file_path, File.WRITE)
 	if error == OK:
@@ -41,10 +41,11 @@ func _collect_tilemaps(start:Node):
 
 func process_tilemaps():
 	var out:Array = []
-	for tilemap in tilemaps:
+	for tm in tilemaps:
+		var tilemap:TileMap = tm
 		var tileset:TileSet = tilemap.tile_set
-		if not tilesets.find(tileset):
-			tilesets.append(tileset)
+		#if not tilesets.find(tileset):
+		#	tilesets.append(tileset)
 		
 #		var tile_ids = tileset.get_tiles_ids()
 #		var atlas_path:Array = []
@@ -62,7 +63,7 @@ func process_tilemaps():
 			#"atlas_path":atlas_path,
 			#"tile_ids":tile_ids,
 			#"tile_regions":tile_regions,
-			
+			"tileset_path":tilemap.tile_set.resource_path,
 			"cell_size":[
 				tilemap.cell_size.x,
 				tilemap.cell_size.y
@@ -100,10 +101,16 @@ func process_tilemaps():
 			var transposed = tilemap.is_cell_transposed(used_cells[indx].x, used_cells[indx].y)
 			var x_flipped = tilemap.is_cell_x_flipped(used_cells[indx].x, used_cells[indx].y)
 			var y_flipped = tilemap.is_cell_y_flipped(used_cells[indx].x, used_cells[indx].y)
+			var atlas_coord:Vector2 = Vector2(
+				tileset.tile_get_region(id).position.x/tilemap.cell_size.x,
+				tileset.tile_get_region(id).position.y/tilemap.cell_size.y
+			)
 			dict["cells"].append({
 				"x":used_cells[indx].x,
 				"y":used_cells[indx].y,
 				"id":id,
+				"atlas": tileset.tile_get_texture(id).resource_path,
+				"atlas_coord": [atlas_coord.x, atlas_coord.y],
 				"transposed":transposed,
 				"x_flipped":x_flipped,
 				"y_flipped":y_flipped
