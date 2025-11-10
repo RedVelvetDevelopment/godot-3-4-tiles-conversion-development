@@ -1,5 +1,4 @@
-extends Node
-class_name TileSetExp
+extends Reference
 
 export var output_path:String
 
@@ -135,7 +134,7 @@ var outputs:Array = []
 
 ## DEPRECATED
 func _ready():
-	get_tilemaps(get_tree().root)
+	#get_tilemaps(get_tree().root)
 	for tilemap in tilemaps:
 		outputs.append(_create_dict(tilemap))
 	
