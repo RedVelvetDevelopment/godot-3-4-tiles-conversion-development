@@ -1,5 +1,4 @@
-extends Node
-class_name TileMapExp
+extends Reference
 
 export var output_path:String
 
@@ -40,7 +39,7 @@ func _collect_tilemaps(start:Node):
 			_collect_tilemaps(child)
 
 func process_tilemap(tilemap:TileMap) -> Dictionary:
-	var tileset:TileSet = tilemap.tile_set		
+	var tileset:TileSet = tilemap.tile_set
 
 	var dict:Dictionary = {
 		"name":tilemap.name,

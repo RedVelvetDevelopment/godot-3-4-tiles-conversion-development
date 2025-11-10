@@ -1,29 +1,31 @@
 tool
 extends EditorInspectorPlugin
-class_name TileSetExporterInspectorPlugin
+
+const TileMapExp = preload("tilemap_exporter.gd")
+
+var exporter:TileMapExp
 
 var _plugin:EditorPlugin
-var _selected_tileset:TileSet
+var _selected_tilemap:TileMap
 var file_dialog:EditorFileDialog
-var exporter:TileSetExp
 
 func set_plugin(p:EditorPlugin) -> void:
 	#print("set_plugin( ", p, " )")
 	if not _plugin: _plugin = p
 	#print("_plugin == ", _plugin)
 	if not exporter: 
-		exporter = TileSetExp.new()
+		exporter = TileMapExp.new()
 	#print("exporter == ", exporter)
 	
 	
 func can_handle(object) -> bool:
-	return object is TileSet
+	return object is TileMap
 
 func parse_begin(object):
-	_selected_tileset = object
+	_selected_tilemap = object
 	var btn = Button.new()
-	btn.name = "TileSetExportButton"
-	btn.text = "Export TileSet"
+	btn.name = "TileMapExportButton"
+	btn.text = "Export TileMap"
 	btn.align = Button.ALIGN_CENTER
 	btn.connect("button_up", self, "_export_btn_pressed")
 	add_custom_control(btn)
@@ -38,8 +40,8 @@ func _get_file_dialogue() -> EditorFileDialog:
 	#print("self.file_dialog == ", file_dialog)
 	if not self.file_dialog:
 		file_dialog = EditorFileDialog.new()
-		file_dialog.name = "TileSetExporterFileDialog"
-		file_dialog.window_title = "Save TileSet JSON Data"
+		file_dialog.name = "TileMapExporterFileDialog"
+		file_dialog.window_title = "Save TileMap JSON Data"
 		file_dialog.access = EditorFileDialog.ACCESS_FILESYSTEM
 		file_dialog.display_mode = EditorFileDialog.DISPLAY_LIST
 		file_dialog.mode = EditorFileDialog.MODE_SAVE_FILE
@@ -56,7 +58,7 @@ func _get_file_dialogue() -> EditorFileDialog:
 
 func _export(path:String):
 	#print("_export( ", path, " )")
-	var data = exporter.process_tileset(_selected_tileset)
+	var data = exporter.process_tilemap(_selected_tilemap)
 	var json = JSON.print(data, "\t")
 	
 	#print("path.get_file() == ", path.get_file())
@@ -70,7 +72,7 @@ func _export(path:String):
 	if file_name_no_ext == "":
 		## if no, build the path with the resource name
 		var constructed_path = path.get_slice(".json",0) 
-		constructed_path += _selected_tileset.resource_path.get_file().get_slice(".tres",0)
+		constructed_path += _selected_tilemap.name
 		constructed_path += ".json"
 		#print("constructed_path == ", constructed_path)
 		file_path = constructed_path
@@ -85,5 +87,3 @@ func _export(path:String):
 		print("File saved to:", file_path)
 	else:
 		push_error("Could not open file for writing!")
-
-
