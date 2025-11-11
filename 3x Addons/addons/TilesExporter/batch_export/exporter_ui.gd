@@ -10,6 +10,7 @@ const TileMapExporter = preload("../tilemap/tilemap_exporter.gd")
 const TileSetExporter = preload("../tileset/tileset_exporter.gd")
 
 ## Key is Object, Value is the string path (could be inside .tscn)
+#Dictionary:{TileMap:{PackedScene:String}}
 var tilemaps:Dictionary = {}
 var tilesets:Dictionary = {} #Load will actually give use a shared ref, we want unique ones
 var retry_counter = 0
@@ -22,6 +23,8 @@ func set_plugin(p:EditorPlugin):
 
 func _ready():
 	scan()
+	print("TileMaps Dict: ", tilemaps)
+	print("TileSets Dict: ", tilesets)
 	export_in_place_btn.connect("button_up",self,"_on_exp_in_place_btn")
 	export_to_dir_btn.connect("button_up", self, "_on_exp_to_dir_btn")
 
@@ -34,13 +37,17 @@ func scan():
 	var discovered_tilesets:Dictionary
 	
 	for scene in scenes:
-		var tile_maps = search_tscn_file(scene)
-		for tilemap in tile_maps:
+		#Dictionary: {TileMap:NodePath}
+		var tile_maps_dict:Dictionary = search_tscn_file(scene)
+		for tilemap in tile_maps_dict.keys():
 			tilemap = tilemap as TileMap
-			if tilemap.tile_set:
+			if tilemap.tile_set: 
 				#This could get set twice, but the resource path should be the same.
 				tilesets[tilemap.tile_set] = tilemap.tile_set.resource_path
-			tilemaps[tilemap] = scene
+			
+			var node_path:String = String(tile_maps_dict[tilemap])
+			node_path = node_path.lstrip("./").percent_encode()
+			tilemaps[tilemap] = {scene:node_path}
 			
 		#exporter.output_path = scene
 	event_log.text += ("Found %d tilemaps\n" % tilemaps.size())
@@ -53,8 +60,9 @@ func _on_exp_in_place_btn():
 	var set_exporter:TileSetExporter = TileSetExporter.new()
 	if not progress.visible: progress.visible = true
 	for tilemap in tilemaps:
-		var path:String = tilemaps[tilemap]
+		var path:String = tilemaps[tilemap].keys()[0]
 		var data = map_exporter.process_tilemap(tilemap)
+		data["resource_path"] = path
 		event_log.text += ("Exporting tilemap %s\n" % path)
 		write_data(path.get_base_dir(),tilemap.name,data,"tilemap")
 	
@@ -89,6 +97,7 @@ func _get_file_dialogue() -> EditorFileDialog:
 	#print("self.file_dialog == ", file_dialog)
 	return file_dialog
 
+#export to dir
 func _export(file_path:String):
 	var map_exporter:TileMapExporter = TileMapExporter.new()
 	var set_exporter:TileSetExporter = TileSetExporter.new()
@@ -96,22 +105,26 @@ func _export(file_path:String):
 	var map_path = create_dir(file_path, "TileMaps")
 	var set_path = create_dir(file_path, "TileSets")
 	for tilemap in tilemaps:
-		var path:String = tilemaps[tilemap]
+		var file_name:String = tilemaps[tilemap].values()[0]
+		print(file_name)
+		print(tilemap)
 		var data = map_exporter.process_tilemap(tilemap)
-		event_log.text += ("Exporting tilemap %s\n" % path)
-		write_data(map_path, tilemap.name, data, "tilemap")
+		data["resource_path"] = tilemaps[tilemap].keys()[0]
+		
+		event_log.text += ("Exporting tilemap %s\n" % file_name)
+		write_data(map_path, file_name, data, "tilemap")
 	
 	for tileset in tilesets:
 		var path:String = tilesets[tileset]
 		var data = set_exporter.process_tileset(tileset)
-		event_log.text += ("Exporting tileset %s\n" % path)
-		write_data(set_path, path.get_file(), data, "tileset")
+		event_log.text += ("Exporting tileset %s\n" % path.replace("/", "%"))
+		write_data(set_path, path.get_slice("res://", 1).percent_encode(), data, "tileset")
 	pass
 
 func write_data(path:String,file_name:String,dict:Dictionary, fallback:String, retry_attempt:bool = false):
 	var json = JSON.print(dict, "\t")
 	#print(file_name)
-	var file_path = path + file_name + ".json"
+	var file_path = path.plus_file( file_name + ".json")
 	var file = File.new()
 	var error = file.open(file_path, File.WRITE)
 	if error == OK:
@@ -141,15 +154,22 @@ func _exit_tree():
 		tilemap.queue_free()
 	pass
 
-func search_tscn_file(path:String) -> Array:
+# returns Dictionary:{TileMap, NodePath}
+func search_tscn_file(path:String) -> Dictionary:
 	event_log.text += "Opening TSCN: " + path + "\n"
-	var results = []
+	var results:Dictionary = {}
 	var scene:PackedScene = load(path)
 	var scene_state:SceneState = scene.get_state()
 	for node_id in scene_state.get_node_count():
 		var type =  scene_state.get_node_type(node_id)
 		if type == "TileMap":
 			event_log.text += "Node of type: " + scene_state.get_node_type(node_id) + " found!\n"
+			
+			
+			var node_path:NodePath = scene_state.get_node_path(node_id)
+			print("node_path: ", node_path)
+			
+			
 			var runtime_tilemap:TileMap = TileMap.new()
 			runtime_tilemap.name = scene_state.get_node_name(node_id)
 			for node_prop_id in scene_state.get_node_property_count(node_id):
@@ -158,7 +178,7 @@ func search_tscn_file(path:String) -> Array:
 				var prop_type = typeof(prop_value)
 				if prop_name != "script":
 					runtime_tilemap.set(prop_name,prop_value)
-			results.append(runtime_tilemap)
+			results[runtime_tilemap] = node_path
 	return results
 
 func get_unique_tilesets(tile_maps:Array) -> Array:
@@ -188,3 +208,9 @@ func get_all_files(path: String, file_ext := "", files := []):
 		event_log.text = ("An error occurred when trying to access %s." % path)
 
 	return files
+
+func _find_scene_root(start:Node) -> Node:
+	var test:Node = start
+	while test.owner != null:
+		test = test.get_parent()
+	return test

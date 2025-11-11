@@ -70,9 +70,13 @@ func _export(path:String):
 	var error
 	## determine of the user entered a name or not
 	if file_name_no_ext == "":
+		var node_path_string:String = ""
+		var node_path = _find_scene_root(_selected_tilemap).get_path_to(_selected_tilemap)
+		for indx in node_path.get_name_count():
+			node_path_string += node_path.get_name(indx)+"%"
 		## if no, build the path with the resource name
 		var constructed_path = path.get_slice(".json",0) 
-		constructed_path += _selected_tilemap.name
+		constructed_path += node_path_string.rstrip("%")
 		constructed_path += ".json"
 		#print("constructed_path == ", constructed_path)
 		file_path = constructed_path
@@ -87,3 +91,9 @@ func _export(path:String):
 		print("File saved to:", file_path)
 	else:
 		push_error("Could not open file for writing!")
+
+func _find_scene_root(start:Node) -> Node:
+	var test:Node = start
+	while test.owner != null:
+		test = test.get_parent()
+	return test
