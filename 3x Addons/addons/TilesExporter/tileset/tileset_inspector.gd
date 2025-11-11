@@ -64,6 +64,8 @@ func _export(path:String):
 	var file_name_no_ext = path.get_file().get_slice(".json", 0)
 	#print("file_name_no_ext == ", file_name_no_ext)
 	
+	var res_path_penc = _selected_tileset.resource_path.replace("/", "%")
+	
 	var file = File.new()
 	var file_path:String
 	var error
@@ -71,7 +73,7 @@ func _export(path:String):
 	if file_name_no_ext == "":
 		## if no, build the path with the resource name
 		var constructed_path = path.get_slice(".json",0) 
-		constructed_path += _selected_tileset.resource_path.get_file().get_slice(".tres",0)
+		constructed_path += _selected_tileset.resource_path.get_slice("res://", 1).replace("/", "%")
 		constructed_path += ".json"
 		#print("constructed_path == ", constructed_path)
 		file_path = constructed_path

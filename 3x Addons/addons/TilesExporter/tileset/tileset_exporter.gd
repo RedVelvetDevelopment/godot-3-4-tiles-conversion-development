@@ -121,6 +121,7 @@ func process_tileset(tileset:TileSet) -> Dictionary:
 	
 	var dict:Dictionary = {
 		"name": tileset.resource_path.get_file(), #extract_name(tileset.resource_path, "/"),
+		"resource_path": tileset.resource_path,
 		"atlases": atlas_arr,
 		"tile_data":tile_data
 	}
