@@ -17,6 +17,13 @@ var exporter
 var file_dialog:EditorFileDialog
 var _plugin:EditorPlugin
 
+var scan_thread:Thread
+var scan_mutex:Mutex
+var scan_results
+
+var export_thread:Thread
+var export_mutex:Mutex
+
 func set_plugin(p:EditorPlugin):
 	if not _plugin: _plugin = p
 
@@ -26,26 +33,43 @@ func _ready():
 	exporter.connect("post_progress", self, "_update_progress_bar")
 	exporter.connect("post_scan_count", self, "_set_progress_max")
 	
-	var scan_results = exporter.scan()
+	scan_thread = Thread.new()
+	scan_mutex = Mutex.new()
+	export_thread = Thread.new()
+	export_mutex = Mutex.new()
+	scan_thread.start(self, "_thread_scan", exporter)
+
+
+func _thread_scan(exporter: BatchExporter):
+	scan_mutex.lock()
+	scan_results = exporter.scan()
 	scan_results = scan_results as BatchExporter.ScanResult
 	export_in_place_btn.connect("button_up",self,"_on_exp_in_place_btn", [scan_results])
 	export_to_dir_btn.connect("button_up", self, "_on_exp_to_dir_btn", [scan_results])
+	scan_mutex.unlock()
 
 func _on_exp_to_dir_btn(ref: BatchExporter.ScanResult): 
-	print("_on_exp_to_dir_btn")
 	var dialog = _get_file_dialogue()
-	dialog.connect("dir_selected", exporter, "export_to_dir", [ref])
+	dialog.connect("dir_selected", self, "_on_exp_dir_selected", [ref])
 	dialog.connect("dir_selected", self, "_show_progress_bar")
 	dialog.popup_centered(Vector2(800,600))
 
 func _on_exp_in_place_btn(ref: BatchExporter.ScanResult):
-	print("_on_exp_in_place_btn")
 	_show_progress_bar()
+	export_thread.start(self, "_in_place_thread", ref)
+
+func _in_place_thread(ref: BatchExporter.ScanResult):
 	exporter.export_in_place(ref)
 
+func _on_exp_dir_selected(path:String, ref: BatchExporter.ScanResult):
+	export_thread.start(self, "_export_dir_thread", [path, ref])
+
+func _export_dir_thread(data:Array):
+	exporter.export_to_dir(data[0], data[1])
+	
+
+
 func _get_file_dialogue() -> EditorFileDialog:
-	#print("_get_file_dialogue()")
-	#print("self.file_dialog == ", file_dialog)
 	if not self.file_dialog:
 		file_dialog = EditorFileDialog.new()
 		file_dialog.name = "BatchTileExporterFileDialog"
@@ -55,38 +79,29 @@ func _get_file_dialogue() -> EditorFileDialog:
 		file_dialog.mode = EditorFileDialog.MODE_OPEN_DIR
 		file_dialog.show_on_top = true
 		file_dialog.dialog_hide_on_ok = true
-		#file_dialog.connect("dir_selected", self, "_export")
-		#print("_plugin == ", _plugin)
 		var base = _plugin.get_editor_interface().get_base_control()
 		base.add_child(file_dialog)
 		base.move_child(file_dialog, 0)
-	#print("self.file_dialog == ", file_dialog)
 	return file_dialog
 
 func _update_log(report):
-	print("_update_log")
 	report = report as String
 	event_log = event_log as RichTextLabel
 	event_log.text += report
 
 func _show_progress_bar(path = ""):
-	print("_show_progress_bar")
 	progress = progress as ProgressBar
 	progress.visible = true
 
 func _update_progress_bar():
-	print("_update_progress_bar")
 	progress = progress as ProgressBar
 	progress.value += 1
 	pass
 
 func _set_progress_max(val:int):
-	print("_set_progress_max")
 	progress = progress as ProgressBar
 	progress.max_value = val
 
 func _exit_tree():
-#	for tilemap in tilemaps:
-#		tilemap.queue_free()
-	pass
-
+	scan_thread.wait_to_finish()
+	export_thread.wait_to_finish()
