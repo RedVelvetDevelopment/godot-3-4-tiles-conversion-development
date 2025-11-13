@@ -11,7 +11,7 @@ var export_in_place_btn:Button
 var export_to_dir_btn:Button
 
 const BatchExporter = preload("batch_exporter.gd")
-var exporter
+var exporter:BatchExporter
 
 
 var file_dialog:EditorFileDialog
@@ -32,20 +32,38 @@ func _ready():
 	exporter.connect("post_log", self, "_update_log")
 	exporter.connect("post_progress", self, "_update_progress_bar")
 	exporter.connect("post_scan_count", self, "_set_progress_max")
+	exporter.connect("post_scan_count", self, "_on_thread_complete")
+	exporter.connect("export_complete",self, "_on_export_complete")
 	
 	export_in_place_btn = $"%ExportInPlaceBtn"
 	export_to_dir_btn  = $"%ExportToDirBtn"
-	connect("_ready_complete", self, "_on_ready_complete")
-	emit_signal("_ready_complete")
+	_disable_btns()
+	if exporter.is_alive():
+		exporter.wait_to_finish()
+	exporter.start(exporter,"scan",null,Thread.PRIORITY_NORMAL)
+	
 #	thread = Thread.new()
 #	mutex = Mutex.new()
 #	thread.start(self, "_thread_scan", exporter)
 #	scan_results = thread.wait_to_finish()
-	
-func _on_ready_complete() -> void:
-	var scan_results = exporter.scan() as BatchExporter.ScanResult
+
+
+func _disable_btns() -> void:
+	export_in_place_btn.disabled = true
+	export_to_dir_btn.disabled = true
+
+func _enabled_btns() -> void:
+	export_in_place_btn.disabled = false
+	export_to_dir_btn.disabled = false
+
+func _on_thread_complete(unused) -> void:
+	#yield(exporter,"post_scan_count")
+	var scan_results = exporter.wait_to_finish()
+	if not is_instance_valid(self): #guard against accessing when user exits dialogue
+		return
 	export_in_place_btn.connect("button_up",self,"_on_exp_in_place_btn", [scan_results])
 	export_to_dir_btn.connect("button_up", self, "_on_exp_to_dir_btn", [scan_results])
+	_enabled_btns()
 
 #func _thread_scan(exporter: BatchExporter) -> BatchExporter.ScanResult:
 #	mutex.lock()
@@ -60,7 +78,9 @@ func _on_exp_to_dir_btn(ref: BatchExporter.ScanResult):
 
 func _on_exp_in_place_btn(ref: BatchExporter.ScanResult):
 	_show_progress_bar()
-	exporter.export_in_place(ref)
+	if exporter.is_alive():
+		exporter.wait_to_finish()
+	exporter.start(exporter,"export_in_place",ref)
 	#thread.start(self, "_in_place_thread", [ref])
 	
 
@@ -71,10 +91,21 @@ func _on_exp_in_place_btn(ref: BatchExporter.ScanResult):
 #	thread.wait_to_finish()
 
 func _on_exp_dir_selected(path:String, ref: BatchExporter.ScanResult):
-	exporter.export_to_dir(path, ref)
-#	thread.start(self, "_export_dir_thread", [path, ref])
-#	thread.wait_to_finish()
-	pass
+	var export_config = exporter.ExportConfiguration.new()
+	export_config.scan_data = ref
+	export_config.file_path = path
+	
+	_show_progress_bar()
+	_disable_btns()
+	if exporter.is_alive():
+		exporter.wait_to_finish()
+	exporter.start(exporter,"export_to_dir",export_config,Thread.PRIORITY_NORMAL)
+
+func _on_export_complete() -> void:
+	exporter.wait_to_finish() #No return value, but we need to mark this thread as completed
+	if not is_instance_valid(self): #guard against accessing when user exits dialogue
+		return
+	_enabled_btns()
 
 #func _export_dir_thread(data:Array):
 #	mutex.lock()
@@ -117,5 +148,9 @@ func _set_progress_max(val:int):
 	progress.max_value = val
 
 func _exit_tree():
+	# We are just going to have to take L here, we cannot block the main thread.
+#	if exporter.is_active():
+#		exporter.wait_to_finish()
+	#exporter.free()
 	#thread.wait_to_finish()
 	pass
