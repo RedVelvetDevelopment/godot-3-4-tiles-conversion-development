@@ -57,8 +57,9 @@ func _replace_tilemaps(index:Dictionary) -> void:
 			var node_path = map_indx[1]
 			post_log.emit("converting TileMap ("+node_path+") at: "+scene_path+"\n")
 			var old_tilemap:TileMap = scene.get_node(NodePath(node_path))
-			var new_layer:TileMapLayer = map_importer.create_layer_from_data(old_tilemap, data)
-			map_importer.replace_tilemap(old_tilemap, new_layer)
+			var new_layer = map_importer.create_layer_from_data(old_tilemap, data)
+			if new_layer != null:
+				map_importer.replace_tilemap(old_tilemap, new_layer)
 		new_packed_scene.pack(scene)
 		#map_importer.backup_and_save(scene_path, new_packed_scene)
 		map_importer.overwrite_save(scene_path, new_packed_scene)

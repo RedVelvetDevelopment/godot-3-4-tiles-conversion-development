@@ -68,7 +68,7 @@ func backup_and_save(old_scene_path:String, new_scene:PackedScene):
 	ResourceSaver.set_uid(swap_path, rid.get_id())
 
 func load_data_from_file(file_path:String) -> Dictionary:
-	print("load_data_from_file")
+	print("load_data_from_file: ", file_path)
 	var text := FileAccess.get_file_as_string(file_path)
 	if text.is_empty():
 		push_error("JSON file was empty")
@@ -81,9 +81,13 @@ func load_data_from_file(file_path:String) -> Dictionary:
 
 func create_layer_from_data(node:TileMap, data:Dictionary) -> TileMapLayer:
 	print("create_layer_from_data")
+	print("converting ", node.name)
+	if data["cells"].size() == 0: 
+		return null
 	var out:TileMapLayer = TileMapLayer.new()
 	var tileset_path = data["tileset_path"]
 	var tileset:TileSet = load(tileset_path)
+	print("loaded tileset: ", tileset.resource_path)
 	out.tile_set = tileset
 	out.rendering_quadrant_size = data["cell_quadrant_size"]
 	out.physics_quadrant_size = data["cell_quadrant_size"]
