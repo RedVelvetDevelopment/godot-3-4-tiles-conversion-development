@@ -1,0 +1,12 @@
+[gd_resource type="TileSet" load_steps=3 format=3 uid="uid://eecn5cio1hdv"]
+
+[ext_resource type="Texture2D" uid="uid://bonidcgyhv5m0" path="res://atlases/Transpose-Reflect-Rotate-Ysort.png" id="1_33x8v"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_brjno"]
+texture = ExtResource("1_33x8v")
+texture_region_size = Vector2i(64, 64)
+2:0/0 = 0
+
+[resource]
+tile_size = Vector2i(64, 32)
+sources/0 = SubResource("TileSetAtlasSource_brjno")
